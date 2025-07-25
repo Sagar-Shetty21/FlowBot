@@ -1,11 +1,26 @@
-import { Background, Controls, ReactFlow, useReactFlow } from "@xyflow/react";
+import {
+    Background,
+    Controls,
+    ReactFlow,
+    useReactFlow,
+    type Connection,
+    type Edge,
+    type EdgeChange,
+    type NodeChange,
+} from "@xyflow/react";
 import { GitBranch } from "lucide-react";
 import { useNodeStore } from "../stores/useNodeStore";
 import { useCallback, useRef } from "react";
+import { useEdgeStore } from "../stores/useEdgeStore";
+import toast, { Toaster } from "react-hot-toast";
 
 const MainCanvas = () => {
     const nodes = useNodeStore((state) => state.nodes);
+    const edges = useEdgeStore((state) => state.edges);
     const addNode = useNodeStore((state) => state.addNode);
+    const addEdge = useEdgeStore((state) => state.addEdge);
+    const updateNodes = useNodeStore((state) => state.updateNodes);
+    const updateEdges = useEdgeStore((state) => state.updateEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const { screenToFlowPosition } = useReactFlow();
 
@@ -28,10 +43,15 @@ const MainCanvas = () => {
             try {
                 const nodeType = JSON.parse(nodeData);
 
+                // Define default node dimensions (adjust these based on your node sizes)
+                const nodeWidth = 300; // Default width of your nodes
+                const nodeHeight = -75; // Default height of your nodes
+
                 // Calculate the position where the node should be dropped
+                // Subtract half the node dimensions to center it on cursor
                 const position = screenToFlowPosition({
-                    x: event.clientX - reactFlowBounds.left,
-                    y: event.clientY - reactFlowBounds.top,
+                    x: event.clientX - reactFlowBounds.left - nodeWidth / 2,
+                    y: event.clientY - reactFlowBounds.top - nodeHeight / 2,
                 });
 
                 // Generate a unique ID for the new node
@@ -61,10 +81,76 @@ const MainCanvas = () => {
         [screenToFlowPosition, addNode]
     );
 
+    const onNodesChange = useCallback(
+        (changes: NodeChange[]) => {
+            updateNodes(changes);
+        },
+        [updateNodes]
+    );
+
+    const onEdgesChange = useCallback(
+        (changes: EdgeChange[]) => {
+            updateEdges(changes);
+        },
+        [updateEdges]
+    );
+
     const handleDragOver = useCallback((event: React.DragEvent) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
     }, []);
+
+    const onConnect = useCallback(
+        (connection: Connection) => {
+            // Check if source handle already has an outgoing edge
+            const existingSourceEdge = edges.find(
+                (edge) =>
+                    edge.source === connection.source &&
+                    edge.sourceHandle === connection.sourceHandle
+            );
+
+            // If source handle already has an edge, prevent the new connection
+            if (existingSourceEdge) {
+                console.warn(
+                    `Source handle ${connection.sourceHandle} on node ${connection.source} already has an outgoing edge. Only one edge per source handle is allowed.`
+                );
+                toast.error(
+                    `Cannot connect multiple edges from the same source handle.`
+                );
+                return; // Exit without creating the edge
+            }
+
+            // Check for duplicate edge (same source, sourceHandle, target, targetHandle)
+            const duplicateEdge = edges.find(
+                (edge) =>
+                    edge.source === connection.source &&
+                    edge.sourceHandle === connection.sourceHandle &&
+                    edge.target === connection.target &&
+                    edge.targetHandle === connection.targetHandle
+            );
+
+            if (duplicateEdge) {
+                console.warn("Duplicate edge connection attempted");
+                toast.error("Cannot create duplicate edge connections.");
+                return; // Exit without creating the edge
+            }
+
+            // Create new edge if validations pass
+            const newEdge: Edge = {
+                id: `${connection.source}-${connection.sourceHandle}-${
+                    connection.target
+                }-${connection.targetHandle}-${Date.now()}`,
+                source: connection.source,
+                target: connection.target,
+                sourceHandle: connection.sourceHandle,
+                targetHandle: connection.targetHandle,
+                type: "default",
+            };
+
+            addEdge(newEdge);
+        },
+        [addEdge, edges] // Added edges to dependency array
+    );
 
     return (
         <div className="flex-1 relative overflow-hidden" ref={reactFlowWrapper}>
@@ -75,8 +161,12 @@ const MainCanvas = () => {
             <div className="relative bg-slate-50 h-full">
                 <ReactFlow
                     nodes={nodes}
+                    edges={edges}
                     onDrop={handleDrop}
                     onDragOver={handleDragOver}
+                    onConnect={onConnect}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
                     proOptions={{ hideAttribution: true }}
                     fitView
                 >
@@ -109,6 +199,12 @@ const MainCanvas = () => {
                             </div>
                         </div>
                     )}
+
+                    <Toaster
+                        containerStyle={{
+                            position: "absolute", // or relative, depending on your layout
+                        }}
+                    />
                 </ReactFlow>
             </div>
         </div>

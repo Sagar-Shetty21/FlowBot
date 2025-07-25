@@ -1,5 +1,5 @@
 // stores/useNodeStore.ts
-import type { Node } from "@xyflow/react";
+import { applyNodeChanges, type Node, type NodeChange } from "@xyflow/react";
 import { create } from "zustand";
 
 interface NodeStore {
@@ -8,6 +8,7 @@ interface NodeStore {
     addNode: (node: Node) => void;
     updateNode: (id: string, partial: Partial<Node>) => void;
     removeNode: (id: string) => void;
+    updateNodes: (changes: NodeChange[]) => void;
 }
 
 export const useNodeStore = create<NodeStore>((set) => ({
@@ -30,5 +31,10 @@ export const useNodeStore = create<NodeStore>((set) => ({
     removeNode: (id) =>
         set((state) => ({
             nodes: state.nodes.filter((n) => n.id !== id),
+        })),
+
+    updateNodes: (changes) =>
+        set((state) => ({
+            nodes: applyNodeChanges(changes, state.nodes),
         })),
 }));
