@@ -47,12 +47,71 @@ const nodeTypes: NodeType[] = [
     },
 ];
 
-interface RightPanelProps {
-    onAddNode: (nodeType: NodeType) => void;
-}
-
-const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
+const NodesSidePanel = () => {
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+    const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
+        // Store the node type data in the drag event
+        event.dataTransfer.setData(
+            "application/reactflow",
+            JSON.stringify(nodeType)
+        );
+        event.dataTransfer.effectAllowed = "move";
+
+        // Create a visual representation of the dragged item
+        const dragImage = document.createElement("div");
+        dragImage.innerHTML = `
+            <div style="
+                position: relative;
+                background: white;
+                border: 2px solid #000000;
+                border-radius: 4px;
+                padding: 8px 30px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-family: system-ui;
+                font-size: 14px;
+                color: #374151;
+            ">
+                <!-- Top dot -->
+                <div style="
+                    position: absolute;
+                    top: -3px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 4px;
+                    height: 4px;
+                    background-color: #000;
+                    border-radius: 50%;
+                "></div>
+
+                <!-- Bottom dot -->
+                <div style="
+                    position: absolute;
+                    bottom: -3px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 4px;
+                    height: 4px;
+                    background-color: #000;
+                    border-radius: 50%;
+                "></div>
+
+                ${nodeType.name}
+            </div>
+        `;
+        dragImage.style.position = "absolute";
+        dragImage.style.top = "-1000px";
+        document.body.appendChild(dragImage);
+        event.dataTransfer.setDragImage(dragImage, 50, 25);
+
+        // Clean up the drag image after drag starts
+        setTimeout(() => {
+            document.body.removeChild(dragImage);
+        }, 0);
+    };
 
     return (
         <div className="relative w-80 h-full">
@@ -73,13 +132,10 @@ const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
                         <div
                             key={node.id}
                             className="relative cursor-pointer group"
-                            onClick={() => {
-                                if (node.id === "message") {
-                                    onAddNode(node);
-                                }
-                            }}
                             onMouseEnter={() => setHoveredNode(node.id)}
                             onMouseLeave={() => setHoveredNode(null)}
+                            draggable={node.id === "message"} // Only message nodes are draggable for now
+                            onDragStart={(event) => onDragStart(event, node)}
                         >
                             {/* Hand-drawn card effect */}
                             <div

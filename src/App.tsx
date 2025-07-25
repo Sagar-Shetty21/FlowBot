@@ -2,34 +2,15 @@ import "@xyflow/react/dist/style.css";
 import Topbar from "./components/Topbar";
 import MainCanvas from "./components/MainCanvas";
 import NodesSidePanel from "./components/NodesSidePanel";
-import { useState } from "react";
-
-interface NodeType {
-    id: string;
-    name: string;
-    icon: React.ReactNode;
-    description: string;
-    color: string;
-}
+import { ReactFlowProvider } from "@xyflow/react";
 
 function App() {
-    const [nodes, setNodes] = useState<NodeType[]>([]);
-
     const handleNewFlow = () => {
         console.log("Creating new flow...");
-        setNodes([]);
     };
 
     const handleViewFlows = () => {
         console.log("Viewing all flows...");
-    };
-
-    const handleAddNode = (nodeType: NodeType) => {
-        console.log("Adding node:", nodeType.name);
-        setNodes((prev) => [
-            ...prev,
-            { ...nodeType, id: `${nodeType.id}-${Date.now()}` },
-        ]);
     };
 
     return (
@@ -37,8 +18,10 @@ function App() {
             <Topbar onNewFlow={handleNewFlow} onViewFlows={handleViewFlows} />
 
             <div className="flex-1 flex gap-1">
-                <MainCanvas nodes={nodes} />
-                <NodesSidePanel onAddNode={handleAddNode} />
+                <ReactFlowProvider>
+                    <MainCanvas />
+                    <NodesSidePanel />
+                </ReactFlowProvider>
             </div>
         </div>
     );
