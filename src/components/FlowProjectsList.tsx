@@ -1,5 +1,4 @@
 import type { Edge, Node } from "@xyflow/react";
-import React from "react";
 import { useNodeStore } from "../stores/useNodeStore";
 import { useEdgeStore } from "../stores/useEdgeStore";
 import { useProjectStore } from "../stores/useProjectStore";
