@@ -9,6 +9,7 @@ interface NodeStore {
     updateNode: (id: string, partial: Partial<Node>) => void;
     removeNode: (id: string) => void;
     updateNodes: (changes: NodeChange[]) => void;
+    emptyNodes: () => void;
 }
 
 export const useNodeStore = create<NodeStore>((set) => ({
@@ -36,5 +37,9 @@ export const useNodeStore = create<NodeStore>((set) => ({
     updateNodes: (changes) =>
         set((state) => ({
             nodes: applyNodeChanges(changes, state.nodes),
+        })),
+    emptyNodes: () =>
+        set(() => ({
+            nodes: [],
         })),
 }));

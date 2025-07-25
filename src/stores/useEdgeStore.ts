@@ -9,6 +9,7 @@ interface EdgeStore {
     updateEdge: (id: string, partial: Partial<Edge>) => void;
     removeEdge: (id: string) => void;
     updateEdges: (changes: EdgeChange[]) => void;
+    emptyEdges: () => void;
 }
 
 export const useEdgeStore = create<EdgeStore>((set) => ({
@@ -36,5 +37,10 @@ export const useEdgeStore = create<EdgeStore>((set) => ({
     updateEdges: (changes) =>
         set((state) => ({
             edges: applyEdgeChanges(changes, state.edges),
+        })),
+
+    emptyEdges: () =>
+        set(() => ({
+            edges: [],
         })),
 }));

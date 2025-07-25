@@ -3,6 +3,7 @@ import type { Node, Edge } from "@xyflow/react";
 interface ProjectData {
     nodes: Node[];
     edges: Edge[];
+    lastEdited?: number; // Timestamp of last edit
 }
 
 export function saveProjectToLocalStorage(
@@ -37,6 +38,6 @@ export function saveProjectToLocalStorage(
     }
 
     // Save the project
-    projects[projectName] = { nodes, edges };
+    projects[projectName] = { nodes, edges, lastEdited: Date.now() };
     localStorage.setItem("chatbot-projects", JSON.stringify(projects));
 }

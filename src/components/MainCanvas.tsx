@@ -13,6 +13,7 @@ import { useNodeStore } from "../stores/useNodeStore";
 import { useCallback, useRef } from "react";
 import { useEdgeStore } from "../stores/useEdgeStore";
 import toast, { Toaster } from "react-hot-toast";
+import { useProjectStore } from "../stores/useProjectStore";
 
 const MainCanvas = () => {
     const nodes = useNodeStore((state) => state.nodes);
@@ -23,6 +24,7 @@ const MainCanvas = () => {
     const updateEdges = useEdgeStore((state) => state.updateEdges);
     const reactFlowWrapper = useRef<HTMLDivElement>(null);
     const { screenToFlowPosition } = useReactFlow();
+    const { setActiveNodeId, activeNodeId } = useProjectStore();
 
     const handleDrop = useCallback(
         (event: React.DragEvent) => {
@@ -169,6 +171,12 @@ const MainCanvas = () => {
                     onEdgesChange={onEdgesChange}
                     proOptions={{ hideAttribution: true }}
                     fitView
+                    onSelectionChange={({ nodes }) => {
+                        const selectedId = nodes[0]?.id ?? null;
+                        if (activeNodeId !== selectedId) {
+                            setActiveNodeId(selectedId);
+                        }
+                    }}
                 >
                     <Background />
                     <Controls />
