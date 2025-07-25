@@ -15,7 +15,7 @@ const Topbar: React.FC<TopbarProps> = ({ onNewFlow, onViewFlows }) => {
             <div className="absolute inset-0 border-2 border-gray-800 transform rotate-0.5"></div>
             <div className="absolute inset-0 border-2 border-gray-800 transform -rotate-0.5"></div>
 
-            <div className="relative bg-white px-6 py-4 flex items-center justify-between">
+            <div className="relative bg-white px-6 py-3 flex items-center justify-between">
                 {/* Logo */}
                 <div className="flex items-center space-x-3">
                     <div className="relative">

@@ -1,4 +1,5 @@
 import { GitBranch, MessageSquare, Send, Settings, Zap } from "lucide-react";
+import { useState } from "react";
 
 interface NodeType {
     id: string;
@@ -51,6 +52,8 @@ interface RightPanelProps {
 }
 
 const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
+    const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
     return (
         <div className="relative w-80 h-full">
             {/* Hand-drawn border */}
@@ -70,7 +73,13 @@ const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
                         <div
                             key={node.id}
                             className="relative cursor-pointer group"
-                            onClick={() => onAddNode(node)}
+                            onClick={() => {
+                                if (node.id === "message") {
+                                    onAddNode(node);
+                                }
+                            }}
+                            onMouseEnter={() => setHoveredNode(node.id)}
+                            onMouseLeave={() => setHoveredNode(null)}
                         >
                             {/* Hand-drawn card effect */}
                             <div
@@ -82,7 +91,11 @@ const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
                                     index % 2 ? "2" : "-2"
                                 } transition-transform`}
                             ></div>
-                            <div className="relative bg-white border-2 border-gray-300 rounded-lg p-4 transform hover:scale-105 transition-transform">
+                            <div
+                                className={`relative bg-white border-2 border-gray-300 rounded-lg p-4 transform hover:scale-105 transition-transform ${
+                                    node.id !== "message" ? "opacity-60" : ""
+                                }`}
+                            >
                                 <div className="flex items-start space-x-3">
                                     <div
                                         className={`${
@@ -102,7 +115,19 @@ const NodesSidePanel: React.FC<RightPanelProps> = ({ onAddNode }) => {
                                         </p>
                                     </div>
                                 </div>
+
+                                {/* Red overlay for unsupported nodes - only on hover */}
+                                {node.id !== "message" &&
+                                    hoveredNode === node.id && (
+                                        <div className="absolute inset-0 bg-red-500 bg-opacity-80 rounded-lg flex items-center justify-center">
+                                            <span className="text-white font-semibold text-sm transform rotate-1 bg-red-600 px-3 py-1 rounded-lg shadow-lg">
+                                                Not Yet Supported
+                                            </span>
+                                        </div>
+                                    )}
                             </div>
+
+                            {/* Tooltip for unsupported nodes - removed since we have overlay now */}
                         </div>
                     ))}
                 </div>
