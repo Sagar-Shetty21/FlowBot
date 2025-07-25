@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Plus, List, Link, Save } from "lucide-react";
 import { useProjectStore } from "../stores/useProjectStore";
+import { saveProjectToLocalStorage } from "../utils/saveProjectToLocalStorage";
+import { useNodeStore } from "../stores/useNodeStore";
+import { useEdgeStore } from "../stores/useEdgeStore";
+import toast from "react-hot-toast";
 
 interface TopbarProps {
     onNewFlow: () => void;
@@ -9,11 +13,21 @@ interface TopbarProps {
 
 const Topbar: React.FC<TopbarProps> = ({ onNewFlow, onViewFlows }) => {
     const [showDropdown, setShowDropdown] = useState(false);
+    const nodes = useNodeStore((state) => state.nodes);
+    const edges = useEdgeStore((state) => state.edges);
     const { activeProject, setActiveProject } = useProjectStore();
 
     const onSave = () => {
-        console.log("Saving current flow...");
-        // Implement save logic here
+        try {
+            saveProjectToLocalStorage(nodes, edges, activeProject);
+            toast.success("Project saved successfully!");
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                toast.error(err.message);
+            } else {
+                toast.error("An unknown error occurred.");
+            }
+        }
     };
 
     return (
@@ -56,7 +70,11 @@ const Topbar: React.FC<TopbarProps> = ({ onNewFlow, onViewFlows }) => {
                 </div>
 
                 <div className="flex items-center space-x-3 flex-shrink-0">
-                    <button onClick={onSave} className="relative group">
+                    <button
+                        onClick={onSave}
+                        className="relative group disabled:opacity-25 disabled:cursor-not-allowed"
+                        disabled={!nodes.length}
+                    >
                         <div className="absolute inset-0 bg-green-400 rounded-lg transform rotate-1 group-hover:rotate-2 transition-transform opacity-80"></div>
                         <div className="relative bg-green-500 text-white px-4 py-2 rounded-lg border-2 border-green-600 transform -rotate-1 group-hover:rotate-0 transition-transform flex items-center space-x-2 shadow-sm">
                             <Save className="w-4 h-4" />
@@ -79,7 +97,7 @@ const Topbar: React.FC<TopbarProps> = ({ onNewFlow, onViewFlows }) => {
 
                         {/* Dropdown Menu */}
                         {showDropdown && (
-                            <div className="absolute right-0 top-12 z-10">
+                            <div className="absolute right-0 top-14 z-10 shadow-lg ">
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-white border-2 border-gray-800 rounded-lg transform rotate-1"></div>
                                     <div className="relative bg-white border-2 border-gray-800 rounded-lg transform -rotate-0.5 p-2 space-y-1 min-w-48">
